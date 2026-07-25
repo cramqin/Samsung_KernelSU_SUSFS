@@ -26,6 +26,15 @@ runs:
      CONFIG_LOG_BUF_SHIFT=20
      EOF
 
+  - name: enable user namespaces (USER_NS)
+    shell: bash
+    run: |
+     cat >> "$GKI_DEFCONFIG" << 'EOF'
+     # Enable User Namespaces
+     CONFIG_USER_NS=y
+     EOF
+
+
   - name: nuke securities for root access
     shell: bash
     run: |
