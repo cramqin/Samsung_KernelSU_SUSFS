@@ -13,10 +13,21 @@ runs:
     run: |
      cd "$COMMON"
      # ABI: use ABI padding for SYSVIPC This commit allows us to enable CONFIG_SYSVIPC in defconfig without breaking kernel ABI
-     patch -p1 < "$KERNEL_PATCHES/common/droidspaces/fix_sysvipc_kabi_6_7_8.patch"
+     patch -p1 --forward < "$KERNEL_PATCHES/common/droidspaces/fix_sysvipc_kabi_6_7_8.patch" || true
 
      if [[ "${{ inputs.kernel_version }}" == "5.10" ]]; then
-      patch -p1 < "$KERNEL_PATCHES/common/droidspaces/fix_abi_padding_for_posix_mqueue.patch"
+      patch -p1 --forward < "$KERNEL_PATCHES/common/droidspaces/fix_abi_padding_for_posix_mqueue.patch" || true
+     fi
+
+     # Patch to fix kernel panic caused by null task queries in user/pid namespaces
+     patch -p1 --forward < "$KERNEL_PATCHES/common/droidspaces/0001-Return-ghost-task-if-task-is-null-and-is-requested-b.patch" || true
+
+     # Export IPC NS symbols for binder/containers
+     if ! grep -q 'EXPORT_SYMBOL.*put_ipc_ns' "ipc/namespace.c"; then
+       echo -e '\nEXPORT_SYMBOL_GPL(put_ipc_ns);' >> "ipc/namespace.c"
+     fi
+     if ! grep -q 'EXPORT_SYMBOL.*init_ipc_ns' "ipc/msgutil.c"; then
+       echo -e '\nEXPORT_SYMBOL_GPL(init_ipc_ns);' >> "ipc/msgutil.c"
      fi
 
      cd "$GITHUB_WORKSPACE"
@@ -25,6 +36,7 @@ runs:
      CONFIG_POSIX_MQUEUE=y
      CONFIG_IPC_NS=y
      CONFIG_PID_NS=y
+     CONFIG_USER_NS=y
      CONFIG_DEVTMPFS=y
      CONFIG_NETFILTER_XT_MATCH_ADDRTYPE=y
      CONFIG_NETFILTER_XT_TARGET_REJECT=y
