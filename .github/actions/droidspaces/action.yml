@@ -30,6 +30,9 @@ runs:
        echo -e '\nEXPORT_SYMBOL_GPL(init_ipc_ns);' >> "ipc/msgutil.c"
      fi
 
+     # Preserve struct cred KABI layout for USER_NS
+     python3 "$GITHUB_WORKSPACE/.github/actions/droidspaces/patch_cred_kabi.py" "$COMMON"
+
      cd "$GITHUB_WORKSPACE"
      cat >> "$GKI_DEFCONFIG" << 'EOF'
      CONFIG_SYSVIPC=y
