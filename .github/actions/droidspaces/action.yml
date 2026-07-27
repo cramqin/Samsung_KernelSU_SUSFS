@@ -31,7 +31,7 @@ runs:
      fi
 
      # Preserve struct cred KABI layout for Samsung KDP / Vendor modules when USER_NS is enabled
-     python3 << 'EOF'
+     python3 -c '
 import re
 
 path = "include/linux/cred.h"
@@ -62,7 +62,7 @@ try:
         print("Successfully patched include/linux/cred.h for USER_NS KABI preservation")
 except Exception as e:
     print(f"cred.h patch note: {e}")
-EOF
+'
 
      cd "$GITHUB_WORKSPACE"
      cat >> "$GKI_DEFCONFIG" << 'EOF'
